@@ -44,9 +44,10 @@
 
             <div class="detalhes">
               <!-- exibe dados de acordo com o menu de navegação -->
-              <router-view v-slot="{ Component }">
+              <router-view v-slot="{ Component }" :pokemon="pokemon" @adicionarHabilidade="adicionarHabilidade"
+                           @removerHabilidade="removerHabilidade">
                 <transition enter-active-class="animate__animated animate__zoomInDown">
-                  <component :is="Component" />
+                  <component :is="Component"/>
                 </transition>
               </router-view>
             </div>
@@ -86,7 +87,9 @@
               <h1>{{ p.id }} {{ p.nome }}</h1>
               <span>{{ p.tipo }}</span>
               <div class="cartao-pokemon-img">
-                <img :src="require(`@/assets/imgs/pokemons/${p.imagem}`)">
+                <transition appear enter-active-class="animate__animated animate__fadeInDown">
+                  <img :src="require(`@/assets/imgs/pokemons/${p.imagem}`)">
+                </transition>
               </div>
             </div>
             <!-- fim listagem dinâmica -->
@@ -107,27 +110,18 @@ export default {
     exibir: false,
     exibirEvolucoes: false,
     pokemon: {},
-    pokemons: [
-      {id: 1, nome: 'Bulbasaur', tipo: 'grama', imagem: '001.png', evolucoes: [2, 3]},
-      {id: 2, nome: 'Ivysaur', tipo: 'grama', imagem: '002.png', evolucoes: [3]},
-      {id: 3, nome: 'Venusaur', tipo: 'grama', imagem: '003.png', evolucoes: []},
-      {id: 4, nome: 'Charmander', tipo: 'fogo', imagem: '004.png', evolucoes: [5, 6]},
-      {id: 5, nome: 'Charmeleon', tipo: 'fogo', imagem: '005.png', evolucoes: [6]},
-      {id: 6, nome: 'Charizard', tipo: 'fogo', imagem: '006.png', evolucoes: []},
-      {id: 7, nome: 'Squirtle', tipo: 'agua', imagem: '007.png', evolucoes: [8, 9]},
-      {id: 8, nome: 'Wartortle', tipo: 'agua', imagem: '008.png', evolucoes: [9]},
-      {id: 9, nome: 'Blastoise', tipo: 'agua', imagem: '009.png', evolucoes: []},
-      {id: 10, nome: 'Caterpie', tipo: 'inseto', imagem: '010.png', evolucoes: [11, 12]},
-      {id: 11, nome: 'Metapod', tipo: 'inseto', imagem: '011.png', evolucoes: [12]},
-      {id: 12, nome: 'Butterfree', tipo: 'inseto', imagem: '012.png', evolucoes: []},
-      {id: 13, nome: 'Weedle', tipo: 'inseto', imagem: '013.png', evolucoes: [14, 15]},
-      {id: 14, nome: 'Kakuna', tipo: 'inseto', imagem: '014.png', evolucoes: [15]},
-      {id: 15, nome: 'Beedrill', tipo: 'inseto', imagem: '015.png', evolucoes: []},
-      {id: 16, nome: 'Pidgey', tipo: 'normal', imagem: '016.png', evolucoes: [17, 18]},
-      {id: 17, nome: 'Pidgeotto', tipo: 'normal', imagem: '017.png', evolucoes: [18]},
-      {id: 18, nome: 'Pidgeot', tipo: 'normal', imagem: '018.png', evolucoes: []}
-    ]
+    pokemons: []
   }),
+  created() {
+
+    fetch('http://localhost:3000/pokemons')
+        .then(response => {
+          return response.json()
+        })
+        .then(data => {
+          this.pokemons = data
+        })
+  },
   methods: {
     exibirEvolucoesTransicao() {
       this.exibirEvolucoes = true
@@ -136,6 +130,8 @@ export default {
       this.exibirEvolucoes = false
     },
     analisarPokemon(p) {
+
+      let mudaPokemonAnalisado = false
       //se o pokemon atual é diferente do pokemon clicado
       //se o atributo exibir é true
       if ((this.pokemon.id !== p.id) && this.exibir) {
@@ -143,12 +139,30 @@ export default {
         setTimeout(() => {
           this.analisarPokemon(p)
         }, 1000)
+
+        mudaPokemonAnalisado = true
       }
 
 
       this.pokemon = p
       this.exibir = !this.exibir
       this.exibirEvolucoes = !this.exibirEvolucoes
+
+      //se a ação for de ocultar o Pokemon
+      //se a ação recursiva não for chamada
+      if (!this.exibir && !mudaPokemonAnalisado) {
+        this.pokemon = {}
+      }
+    },
+    adicionarHabilidade(habilidade) {
+      if (this.pokemon.habilidades) {
+        this.pokemon.habilidades.push(habilidade)
+      }
+    },
+    removerHabilidade(indice) {
+      if (this.pokemon.habilidades[indice]) {
+        this.pokemon.habilidades.splice(indice,1)
+      }
     }
   }
 }
