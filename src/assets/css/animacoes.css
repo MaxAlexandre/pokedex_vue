@@ -181,3 +181,7 @@
 .lista-move {
     transition: 1s;
 }
+
+.ordenacao-move {
+    transition: all 2s;
+}
